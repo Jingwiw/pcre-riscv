@@ -94,7 +94,14 @@
 #define VARIABLE_FLAG_SHIFT (10)
 #define VARIABLE_FLAG_MASK (0x3f << VARIABLE_FLAG_SHIFT)
 #define GET_FLAG_TYPE(op) ((op) >> VARIABLE_FLAG_SHIFT)
+/*#if (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS) \
+	|| (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 
+#define SLJIT_SKIP_CHECKS(compiler) (compiler)->skip_checks = 1
+#else /* !SLJIT_ARGUMENT_CHECKS && !SLJIT_VERBOSE 
+
+#define SLJIT_SKIP_CHECKS(compiler)
+#endif*/
 #define GET_OPCODE(op) \
 	((op) & ~(SLJIT_I32_OP | SLJIT_SET_Z | VARIABLE_FLAG_MASK))
 
@@ -238,7 +245,90 @@
 
 #	define PATCH_B		0x20
 #	define PATCH_CALL	0x40
+#endif
+#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+#	define IS_COND		0x004
+#	define IS_CALL		0x008
 
+#	define PATCH_B		0x010
+#	define PATCH_J		0x020
+#define REG_PAIR_FIRST(reg)	((reg) & 0xff)
+#define REG_PAIR_SECOND(reg)	((reg) >> 8)
+#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+#	define PATCH_REL32	0x040
+#	define PATCH_ABS32	0x080
+#	define PATCH_ABS44	0x100
+#	define PATCH_ABS52	0x200
+#define SLJIT_ENTER_REG_ARG	0x00000004
+#   define SLJIT_HAS_ZERO_REGISTER		2
+#   define SLJIT_ORDERED_LESS_EQUAL		33
+#   define SLJIT_ARG_SHIFT 4
+#   define SLJIT_ARG_MASK		0x7
+#   define SLJIT_ARG_TYPE_SCRATCH_REG 0x8
+#   define SLJIT_CTZ			(SLJIT_OP1_BASE + 11)
+#define SLJIT_KEPT_SAVEDS_COUNT(options) ((options) & 0x3)
+#define SLJIT_OP_SRC_BASE		128
+#define SLJIT_ENDBR			(SLJIT_OP0_BASE + 8)
+#define SLJIT_MSHL			(SLJIT_OP2_BASE + 9)
+#define SLJIT_MLSHR			(SLJIT_OP2_BASE + 11)
+#define SLJIT_MASHR			(SLJIT_OP2_BASE + 13)
+#define SLJIT_ROTL			(SLJIT_OP2_BASE + 14)
+#define SLJIT_ROTR			(SLJIT_OP2_BASE + 15)
+#define SLJIT_SKIP_FRAMES_BEFORE_RETURN	(SLJIT_OP0_BASE + 9)
+#define SLJIT_CURRENT_FLAGS_ADD			0x01
+#define SLJIT_CURRENT_FLAGS_SUB			0x02
+#define SLJIT_SHIFT_INTO_NON_ZERO	0x200
+#define SLJIT_SKIP_FRAMES_BEFORE_FAST_RETURN	(SLJIT_OP_SRC_BASE + 1)
+#define SLJIT_PREFETCH_L1		(SLJIT_OP_SRC_BASE + 2)
+#define SLJIT_PREFETCH_L2		(SLJIT_OP_SRC_BASE + 3)
+#define SLJIT_PREFETCH_L3		(SLJIT_OP_SRC_BASE + 4)
+#define SLJIT_PREFETCH_ONCE		(SLJIT_OP_SRC_BASE + 5)
+#define SLJIT_CARRY			12
+#define SLJIT_NOT_CARRY			13
+#define SLJIT_F_EQUAL				14
+#define SLJIT_F_NOT_EQUAL			15
+#define SLJIT_F_LESS				16
+#define SLJIT_F_GREATER_EQUAL			17
+#define SLJIT_F_GREATER				18
+#define SLJIT_F_LESS_EQUAL			19
+#define SLJIT_UNORDERED				20
+#define SLJIT_ORDERED				21
+#define SLJIT_ORDERED_EQUAL			22
+#define SLJIT_UNORDERED_OR_NOT_EQUAL		23
+#define SLJIT_ORDERED_LESS			24
+#define SLJIT_UNORDERED_OR_GREATER_EQUAL	25
+#define SLJIT_ORDERED_GREATER			26
+#define SLJIT_UNORDERED_OR_LESS_EQUAL		27
+#define SLJIT_UNORDERED_OR_EQUAL		28
+#define SLJIT_ORDERED_NOT_EQUAL			29
+#define SLJIT_UNORDERED_OR_LESS			30
+#define SLJIT_ORDERED_GREATER_EQUAL		31
+#define SLJIT_UNORDERED_OR_GREATER		32
+#define SLJIT_ORDERED_LESS_EQUAL		33
+#define SLJIT_LSHR			(SLJIT_OP2_BASE + 10)
+#define REG_PAIR_MASK		0xff00
+#define SLJIT_FAST_RETURN		(SLJIT_OP_SRC_BASE + 0)
+#define SSIZE_OF(type) ((sljit_s32)sizeof(sljit_ ## type))
+#define SLJIT_CALL_RETURN		0x2000
+static sljit_s32 sljit_emit_mem_unaligned(struct sljit_compiler *compiler, sljit_s32 type,
+	sljit_s32 reg,
+	sljit_s32 mem, sljit_sw memw)
+{
+	//SLJIT_SKIP_CHECKS(compiler);
+	#if (defined SLJIT_VERBOSE && SLJIT_VERBOSE) \
+		|| (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS)
+	compiler->skip_checks = 1;
+	 #endif
+	if (type & SLJIT_MEM_STORE)
+		return sljit_emit_op1(compiler, type & (0xff | SLJIT_I32_OP), mem, memw, reg, 0);
+	return sljit_emit_op1(compiler, type & (0xff | SLJIT_I32_OP), reg, 0, mem, memw);
+}
+#define GET_SAVED_FLOAT_REGISTERS_SIZE(fscratches, fsaveds, size) \
+	(((fscratches < SLJIT_NUMBER_OF_SCRATCH_FLOAT_REGISTERS ? 0 : (fscratches - SLJIT_NUMBER_OF_SCRATCH_FLOAT_REGISTERS)) + \
+		(fsaveds)) * (sljit_s32)(size))
+#else /* !SLJIT_CONFIG_RISCV_64 */
+#	define PATCH_REL32	0x0
+#endif /* SLJIT_CONFIG_RISCV_64 */
 	/* instruction types */
 #	define MOVABLE_INS	0
 	/* 1 - 31 last destination register */
@@ -354,6 +444,7 @@
 #define CHECK_REG_INDEX(x)
 
 #endif /* SLJIT_ARGUMENT_CHECKS */
+
 
 /* --------------------------------------------------------------------- */
 /*  Public functions                                                     */
@@ -2016,6 +2107,7 @@ static SLJIT_INLINE sljit_s32 emit_mov_before_return(struct sljit_compiler *comp
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86) \
 		|| (defined SLJIT_CONFIG_PPC && SLJIT_CONFIG_PPC) \
 		|| (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32) \
+		|| (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV) \
 		|| ((defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS) && !(defined SLJIT_MIPS_R1 && SLJIT_MIPS_R1))
 
 static SLJIT_INLINE sljit_s32 sljit_emit_cmov_generic(struct sljit_compiler *compiler, sljit_s32 type,
@@ -2091,13 +2183,35 @@ static SLJIT_INLINE sljit_s32 sljit_emit_cmov_generic(struct sljit_compiler *com
 #	include "sljitNativePPC_common.c"
 #elif (defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS)
 #	include "sljitNativeMIPS_common.c"
+#elif (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+#	include "sljitNativeRISCV_common.c"
 #elif (defined SLJIT_CONFIG_SPARC && SLJIT_CONFIG_SPARC)
 #	include "sljitNativeSPARC_common.c"
 #elif (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
 #	include "sljitNativeTILEGX_64.c"
 #endif
+/*#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *compiler, sljit_s32 op, sljit_s32 src, sljit_sw srcw)
+{
+	CHECK_ERROR();
+	CHECK(check_sljit_emit_return(compiler, op, src, srcw));
 
-#if !(defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS)
+	if (GET_OPCODE(op) < SLJIT_MOV_F64) {
+		FAIL_IF(emit_mov_before_return(compiler, op, src, srcw));
+	} else {
+		FAIL_IF(emit_fmov_before_return(compiler, op, src, srcw));
+	}
+
+	//SLJIT_SKIP_CHECKS(compiler);
+	#if (defined SLJIT_VERBOSE && SLJIT_VERBOSE) \
+		|| (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS)
+	compiler->skip_checks = 1;
+    #endif
+	return sljit_emit_return_void(compiler);
+}
+#endif*/
+#if !(defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS) \
+&& !(defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_cmp(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 src1, sljit_sw src1w,
@@ -2204,7 +2318,8 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_fcmp(struct sljit_compile
 
 #if !(defined SLJIT_CONFIG_ARM_32 && SLJIT_CONFIG_ARM_32) \
 	&& !(defined SLJIT_CONFIG_ARM_64 && SLJIT_CONFIG_ARM_64) \
-	&& !(defined SLJIT_CONFIG_PPC && SLJIT_CONFIG_PPC)
+	&& !(defined SLJIT_CONFIG_PPC && SLJIT_CONFIG_PPC) \
+	&& !(defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_mem(struct sljit_compiler *compiler, sljit_s32 type,
 	sljit_s32 reg,
@@ -2361,7 +2476,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_set_context(struct sljit_compiler *comp
 	SLJIT_UNREACHABLE();
 	return SLJIT_ERR_UNSUPPORTED;
 }
-
+#if !(defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *compiler, sljit_s32 op, sljit_s32 src, sljit_sw srcw)
 {
 	SLJIT_UNUSED_ARG(compiler);
@@ -2371,7 +2486,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *comp
 	SLJIT_UNREACHABLE();
 	return SLJIT_ERR_UNSUPPORTED;
 }
-
+#endif
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_enter(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
 {
 	SLJIT_UNUSED_ARG(compiler);
@@ -2380,7 +2495,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_enter(struct sljit_compiler *
 	SLJIT_UNREACHABLE();
 	return SLJIT_ERR_UNSUPPORTED;
 }
-
+#if !(defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_return(struct sljit_compiler *compiler, sljit_s32 src, sljit_sw srcw)
 {
 	SLJIT_UNUSED_ARG(compiler);
@@ -2389,7 +2504,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_return(struct sljit_compiler 
 	SLJIT_UNREACHABLE();
 	return SLJIT_ERR_UNSUPPORTED;
 }
-
+#endif
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op0(struct sljit_compiler *compiler, sljit_s32 op)
 {
 	SLJIT_UNUSED_ARG(compiler);

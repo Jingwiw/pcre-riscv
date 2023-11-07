@@ -381,6 +381,7 @@ struct sljit_compiler {
 	struct sljit_put_label *last_put_label;
 
 	void *allocator_data;
+   void *exec_allocator_data;
 	struct sljit_memory_fragment *buf;
 	struct sljit_memory_fragment *abuf;
 
@@ -440,7 +441,11 @@ struct sljit_compiler {
 	sljit_s32 cache_arg;
 	sljit_sw cache_argw;
 #endif
-
+#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+	sljit_s32 cache_arg;
+	sljit_sw cache_argw;
+   sljit_s32 status_flags_state;
+#endif
 #if (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32)
 	sljit_s32 delay_slot;
 	sljit_s32 cache_arg;
@@ -678,6 +683,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *comp
    Flags: - (does not modify flags). */
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_enter(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw);
+
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_return(struct sljit_compiler *compiler, sljit_s32 src, sljit_sw srcw);
 
 /*
@@ -1009,7 +1015,11 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op1(struct sljit_compiler *compile
    If src2 is immediate, src2w is masked by (bit_length - 1).
    Otherwise, if the content of src2 is outside the range from 0
    to bit_length - 1, the result is undefined. */
+#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+#define SLJIT_ASHR			(SLJIT_OP2_BASE + 12)
+#else
 #define SLJIT_ASHR			(SLJIT_OP2_BASE + 10)
+#endif
 #define SLJIT_ASHR32			(SLJIT_ASHR | SLJIT_I32_OP)
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2(struct sljit_compiler *compiler, sljit_s32 op,

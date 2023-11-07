@@ -84,6 +84,8 @@
 	|| (defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64) \
 	|| (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32) \
 	|| (defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64) \
+	|| (defined SLJIT_CONFIG_RISCV_32 && SLJIT_CONFIG_RISCV_32) \
+	|| (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64) \
 	|| (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32) \
 	|| (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX) \
 	|| (defined SLJIT_CONFIG_AUTO && SLJIT_CONFIG_AUTO) \
@@ -102,6 +104,8 @@
 	+ (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX) \
 	+ (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32) \
 	+ (defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64) \
+	+ (defined SLJIT_CONFIG_RISCV_32 && SLJIT_CONFIG_RISCV_32) \
+	+ (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64) \
 	+ (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32) \
 	+ (defined SLJIT_CONFIG_AUTO && SLJIT_CONFIG_AUTO) \
 	+ (defined SLJIT_CONFIG_UNSUPPORTED && SLJIT_CONFIG_UNSUPPORTED) >= 2
@@ -138,6 +142,10 @@
 #define SLJIT_CONFIG_MIPS_32 1
 #elif defined(__mips64)
 #define SLJIT_CONFIG_MIPS_64 1
+#elif defined (__riscv_xlen) && (__riscv_xlen == 32)
+#define SLJIT_CONFIG_RISCV_32 1
+#elif defined (__riscv_xlen) && (__riscv_xlen == 64)
+#define SLJIT_CONFIG_RISCV_64 1
 #elif defined(__sparc__) || defined(__sparc)
 #define SLJIT_CONFIG_SPARC_32 1
 #elif defined(__tilegx__)
@@ -187,6 +195,8 @@
 #define SLJIT_CONFIG_PPC 1
 #elif (defined SLJIT_CONFIG_MIPS_32 && SLJIT_CONFIG_MIPS_32) || (defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64)
 #define SLJIT_CONFIG_MIPS 1
+#elif (defined SLJIT_CONFIG_RISCV_32 && SLJIT_CONFIG_RISCV_32) || (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
+#define SLJIT_CONFIG_RISCV 1
 #elif (defined SLJIT_CONFIG_SPARC_32 && SLJIT_CONFIG_SPARC_32) || (defined SLJIT_CONFIG_SPARC_64 && SLJIT_CONFIG_SPARC_64)
 #define SLJIT_CONFIG_SPARC 1
 #endif
@@ -377,6 +387,7 @@ typedef long int sljit_sw;
 	&& !(defined SLJIT_CONFIG_ARM_64 && SLJIT_CONFIG_ARM_64) \
 	&& !(defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64) \
 	&& !(defined SLJIT_CONFIG_MIPS_64 && SLJIT_CONFIG_MIPS_64) \
+	&& !(defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64) \
 	&& !(defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
 #define SLJIT_32BIT_ARCHITECTURE 1
 #define SLJIT_WORD_SHIFT 2
@@ -478,6 +489,7 @@ typedef double sljit_f64;
 	|| (defined SLJIT_CONFIG_ARM_THUMB2 && SLJIT_CONFIG_ARM_THUMB2) \
 	|| (defined SLJIT_CONFIG_ARM_64 && SLJIT_CONFIG_ARM_64) \
 	|| (defined SLJIT_CONFIG_PPC_32 && SLJIT_CONFIG_PPC_32) \
+	|| (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV) \
 	|| (defined SLJIT_CONFIG_PPC_64 && SLJIT_CONFIG_PPC_64)
 #define SLJIT_UNALIGNED 1
 #endif
@@ -645,7 +657,13 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_sw sljit_exec_offset(void* ptr);
    4th double arg (2), double alignment (1). */
 #define SLJIT_LOCALS_OFFSET_BASE ((16 + 1 + 6 + 2 + 1) * sizeof(sljit_sw))
 #endif
+#elif (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 
+#define SLJIT_NUMBER_OF_REGISTERS 23
+#define SLJIT_NUMBER_OF_SAVED_REGISTERS 12
+#define SLJIT_LOCALS_OFFSET_BASE 0
+#define SLJIT_NUMBER_OF_FLOAT_REGISTERS 30
+#define SLJIT_NUMBER_OF_SAVED_FLOAT_REGISTERS 12
 #elif (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
 
 #define SLJIT_NUMBER_OF_REGISTERS 10
