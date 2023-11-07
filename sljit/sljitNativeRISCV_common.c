@@ -2293,11 +2293,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *comp
 	CHECK_ERROR();
 	CHECK(check_sljit_emit_return(compiler, op, src, srcw));
 
-	if (GET_OPCODE(op) < SLJIT_MOV_F64) {
-		FAIL_IF(emit_mov_before_return(compiler, op, src, srcw));
-	} else {
-		FAIL_IF(emit_fmov_before_return(compiler, op, src, srcw));
-	}
+	FAIL_IF(emit_mov_before_return(compiler, op, src, srcw));
 
 	//SLJIT_SKIP_CHECKS(compiler);
 	#if (defined SLJIT_VERBOSE && SLJIT_VERBOSE) \

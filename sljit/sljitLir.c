@@ -305,7 +305,12 @@
 #define SLJIT_ORDERED_GREATER_EQUAL		31
 #define SLJIT_UNORDERED_OR_GREATER		32
 #define SLJIT_ORDERED_LESS_EQUAL		33
+#ifdef SLJIT_LSHR
+#undef SLJIT_LSHR
+#undef SLJIT_LSHR32
+#endif
 #define SLJIT_LSHR			(SLJIT_OP2_BASE + 10)
+#define SLJIT_LSHR32			(SLJIT_LSHR | SLJIT_I32_OP)
 #define REG_PAIR_MASK		0xff00
 #define SLJIT_FAST_RETURN		(SLJIT_OP_SRC_BASE + 0)
 #define SSIZE_OF(type) ((sljit_s32)sizeof(sljit_ ## type))
@@ -2190,26 +2195,6 @@ static SLJIT_INLINE sljit_s32 sljit_emit_cmov_generic(struct sljit_compiler *com
 #elif (defined SLJIT_CONFIG_TILEGX && SLJIT_CONFIG_TILEGX)
 #	include "sljitNativeTILEGX_64.c"
 #endif
-/*#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
-SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *compiler, sljit_s32 op, sljit_s32 src, sljit_sw srcw)
-{
-	CHECK_ERROR();
-	CHECK(check_sljit_emit_return(compiler, op, src, srcw));
-
-	if (GET_OPCODE(op) < SLJIT_MOV_F64) {
-		FAIL_IF(emit_mov_before_return(compiler, op, src, srcw));
-	} else {
-		FAIL_IF(emit_fmov_before_return(compiler, op, src, srcw));
-	}
-
-	//SLJIT_SKIP_CHECKS(compiler);
-	#if (defined SLJIT_VERBOSE && SLJIT_VERBOSE) \
-		|| (defined SLJIT_ARGUMENT_CHECKS && SLJIT_ARGUMENT_CHECKS)
-	compiler->skip_checks = 1;
-    #endif
-	return sljit_emit_return_void(compiler);
-}
-#endif*/
 #if !(defined SLJIT_CONFIG_MIPS && SLJIT_CONFIG_MIPS) \
 && !(defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
 
