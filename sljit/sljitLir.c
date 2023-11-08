@@ -254,7 +254,7 @@
 #	define PATCH_J		0x020
 #define REG_PAIR_FIRST(reg)	((reg) & 0xff)
 #define REG_PAIR_SECOND(reg)	((reg) >> 8)
-#if (defined SLJIT_CONFIG_RISCV && SLJIT_CONFIG_RISCV)
+#if (defined SLJIT_CONFIG_RISCV_64 && SLJIT_CONFIG_RISCV_64)
 #	define PATCH_REL32	0x040
 #	define PATCH_ABS32	0x080
 #	define PATCH_ABS44	0x100
@@ -334,14 +334,13 @@ static sljit_s32 sljit_emit_mem_unaligned(struct sljit_compiler *compiler, sljit
 #else /* !SLJIT_CONFIG_RISCV_64 */
 #	define PATCH_REL32	0x0
 #endif /* SLJIT_CONFIG_RISCV_64 */
+
 	/* instruction types */
 #	define MOVABLE_INS	0
 	/* 1 - 31 last destination register */
 	/* no destination (i.e: store) */
 #	define UNMOVABLE_INS	32
-
 #	define DST_INS_MASK	0xff
-
 	/* ICC_SET is the same as SET_FLAGS. */
 #	define ICC_IS_SET	(1 << 23)
 #	define FCC_IS_SET	(1 << 24)
