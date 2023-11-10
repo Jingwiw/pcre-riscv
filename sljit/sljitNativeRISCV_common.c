@@ -675,7 +675,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_enter(struct sljit_compiler *compi
 	tmp = SLJIT_R0;
 
 	while (arg_types > 0) {
-		if ((arg_types & SLJIT_ARG_MASK) < SLJIT_ARG_TYPE_F64) {
+		if ((arg_types & SLJIT_ARG_MASK) < SLJIT_ARG_TYPE_F32) {
 			if (!(arg_types & SLJIT_ARG_TYPE_SCRATCH_REG)) {
 				FAIL_IF(push_inst(compiler, ADDI | RD(SLJIT_S0 - saved_arg_count) | RS1(tmp) | IMM_I(0)));
 				saved_arg_count++;
